@@ -43,7 +43,7 @@ All settings are under **Game Settings → Module Settings → DSA5 Dynamic Toke
 | Show on Hover Only | Off | Hide arc and ring tint until hovering over the token |
 | Arc Span | 120° | Total width of the arc in degrees |
 | Arc Offset | 0° | Rotation of the arc center from 3 o'clock (−90° = 12pm, 90° = 6pm) |
-| Arc Width | 5 px | Stroke thickness of the arc |
+| Arc Width | 5% | Stroke thickness as a percentage of the token's width |
 | Arc Radius | 78% | Distance from token center as % of token radius |
 
 ## How It Works
