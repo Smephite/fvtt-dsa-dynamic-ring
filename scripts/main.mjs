@@ -29,9 +29,10 @@ const COLOR_PAIN_IV   = 0xAA0000; // ≤ 5 LP — Schmerz IV
 const STATUS_KEY_MAP = { LeP: "wounds", AsP: "astralenergy", KaP: "karmaenergy" };
 const STATUS_KEYS = Object.values(STATUS_KEY_MAP);
 
-// Health arc
+// Health arc — 120° centered at 3 o'clock (1pm → 5pm)
 const HEALTH_ARC_NAME = `${MODULE_ID}.health-arc`;
-const ARC_SEGMENTS = 32;
+const ARC_SPAN  = (120 * Math.PI) / 180;
+const ARC_START = -ARC_SPAN / 2; // −60° = 1pm position
 
 /* ---------------------------------------- */
 /*  Settings                                */
@@ -169,29 +170,20 @@ function refreshHealthArc(token) {
     const cy = token.h / 2;
     const radius = token.w / 2 + 5;
     const arcWidth = Math.max(3, Math.round(token.w / 20));
-    const START = -Math.PI / 2; // 12 o'clock, clockwise
+    const END = ARC_START + ARC_SPAN;
 
-    // Background track
-    gfx.lineStyle({ width: arcWidth, color: 0x111111, alpha: 0.5, cap: PIXI.LINE_CAP.BUTT });
-    gfx.arc(cx, cy, radius, 0, Math.PI * 2);
+    // Background track (full 120°)
+    gfx.lineStyle({ width: arcWidth, color: 0x111111, alpha: 0.5, cap: PIXI.LINE_CAP.ROUND });
+    gfx.moveTo(cx + radius * Math.cos(ARC_START), cy + radius * Math.sin(ARC_START));
+    gfx.arc(cx, cy, radius, ARC_START, END);
 
+    // Filled portion — solid color of current Schmerzstufe
     const pct = Math.clamp(res.value / res.max, 0, 1);
     if (pct > 0) {
-      // Gradient fill: segment i represents the HP at (i/(segments-1)) * current,
-      // so the arc reads left=critical → right=current state.
-      const fillAngle = pct * Math.PI * 2;
-      const segAngle = fillAngle / ARC_SEGMENTS;
-
-      for (let i = 0; i < ARC_SEGMENTS; i++) {
-        const segHP = (i / (ARC_SEGMENTS - 1)) * res.value;
-        gfx.lineStyle({
-          width: arcWidth,
-          color: colorForHP(segHP, res.max),
-          alpha: 1,
-          cap: PIXI.LINE_CAP.BUTT,
-        });
-        gfx.arc(cx, cy, radius, START + segAngle * i, START + segAngle * (i + 1));
-      }
+      const fillEnd = ARC_START + pct * ARC_SPAN;
+      gfx.lineStyle({ width: arcWidth, color: colorForHP(res.value, res.max), alpha: 1, cap: PIXI.LINE_CAP.ROUND });
+      gfx.moveTo(cx + radius * Math.cos(ARC_START), cy + radius * Math.sin(ARC_START));
+      gfx.arc(cx, cy, radius, ARC_START, fillEnd);
     }
   }
 
