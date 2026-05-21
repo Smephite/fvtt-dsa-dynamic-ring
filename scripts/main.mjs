@@ -118,7 +118,7 @@ function getResource(actor, key) {
   const statusKey = STATUS_KEY_MAP[key];
   const stat = actor.system.status[statusKey];
   if (stat && typeof stat.max === "number" && stat.max > 0) {
-    return { value: Number(stat.current ?? 0), max: stat.max };
+    return { value: Number(stat.value ?? stat.current ?? 0), max: stat.max };
   }
   return null;
 }
@@ -257,9 +257,11 @@ function onPreUpdateActor(actor, changes, options, userId) {
   const statusChanges = changes?.system?.status;
   if (!statusChanges) return;
   for (const statusKey of STATUS_KEYS) {
-    if (statusChanges[statusKey]?.current !== undefined) {
-      const current = actor.system?.status?.[statusKey]?.current ?? 0;
-      foundry.utils.setProperty(options, `${MODULE_ID}.prev_${statusKey}`, current);
+    const changed = statusChanges[statusKey];
+    if (changed?.value !== undefined || changed?.current !== undefined) {
+      const stat = actor.system?.status?.[statusKey];
+      const prev = stat?.value ?? stat?.current ?? 0;
+      foundry.utils.setProperty(options, `${MODULE_ID}.prev_${statusKey}`, prev);
     }
   }
 }
@@ -269,8 +271,9 @@ function onUpdateActor(actor, changes, options, userId) {
   const statusChanges = changes?.system?.status;
   if (!statusChanges) return;
   for (const statusKey of STATUS_KEYS) {
-    if (statusChanges[statusKey]?.current === undefined) continue;
-    const newVal = statusChanges[statusKey].current;
+    const changed = statusChanges[statusKey];
+    if (changed?.value === undefined && changed?.current === undefined) continue;
+    const newVal = changed.value ?? changed.current;
     const prevVal = options?.[`${MODULE_ID}.prev_${statusKey}`] ?? newVal;
     const delta = newVal - prevVal;
     if (delta === 0) continue;
@@ -292,7 +295,7 @@ function onHoverToken(token, hovered) {
 function onUpdateActorRefresh(actor, changes, options, userId) {
   const statusChanges = changes?.system?.status;
   if (!statusChanges) return;
-  if (!STATUS_KEYS.some(k => statusChanges[k]?.current !== undefined)) return;
+  if (!STATUS_KEYS.some(k => statusChanges[k]?.value !== undefined || statusChanges[k]?.current !== undefined)) return;
   for (const token of actor.getActiveTokens(true)) {
     applyRingColor(token);
     refreshHealthArc(token);
