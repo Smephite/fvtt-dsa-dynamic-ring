@@ -168,7 +168,7 @@ function refreshHealthArc(token) {
   if (res) {
     const cx = token.w / 2;
     const cy = token.h / 2;
-    const radius = token.w / 2 + 5;
+    const radius = token.w / 2 * 0.78;
     const arcWidth = Math.max(3, Math.round(token.w / 20));
     const END = ARC_START + ARC_SPAN;
 
@@ -177,13 +177,13 @@ function refreshHealthArc(token) {
     gfx.moveTo(cx + radius * Math.cos(ARC_START), cy + radius * Math.sin(ARC_START));
     gfx.arc(cx, cy, radius, ARC_START, END);
 
-    // Filled portion — solid color of current Schmerzstufe
+    // Filled portion — anchored at bottom (5pm), drains from top (1pm) as HP drops
     const pct = Math.clamp(res.value / res.max, 0, 1);
     if (pct > 0) {
-      const fillEnd = ARC_START + pct * ARC_SPAN;
+      const fillStart = ARC_START + (1 - pct) * ARC_SPAN;
       gfx.lineStyle({ width: arcWidth, color: colorForHP(res.value, res.max), alpha: 1, cap: PIXI.LINE_CAP.ROUND });
-      gfx.moveTo(cx + radius * Math.cos(ARC_START), cy + radius * Math.sin(ARC_START));
-      gfx.arc(cx, cy, radius, ARC_START, fillEnd);
+      gfx.moveTo(cx + radius * Math.cos(fillStart), cy + radius * Math.sin(fillStart));
+      gfx.arc(cx, cy, radius, fillStart, END);
     }
   }
 
