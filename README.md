@@ -1,36 +1,36 @@
 # DSA5 Dynamic Token Ring
 
-A Foundry VTT module that integrates **Das Schwarze Auge 5** resources (LeP, AsP, KaP) into Foundry's Dynamic Token Ring system.
+A Foundry VTT module that visualizes **Das Schwarze Auge 5** resources (LeP, AsP, KaP) on tokens using a PIXI health arc and Foundry's Dynamic Token Ring system.
 
 ## Features
 
-- **Ring color gradient** reflects current resource level:
-  - **Green** → healthy (above mid threshold)
-  - **Yellow** → wounded (between low and mid threshold)
-  - **Red** → critical (below low threshold)
-  - **Gray** → at zero
-- **Flash on damage/healing**: ring flashes red on damage, green on healing
-- **Configurable resource source**: track LeP, AsP, or KaP
-- **Adjustable thresholds**: customize when the ring transitions between colors
-- **Bilingual**: English and German UI
+- **Health arc** drawn directly on the token, showing current resource as a colored progress bar
+- **Schmerzstufen color coding** — color transitions follow DSA5 pain thresholds:
+  - Green → healthy (> 75% LP)
+  - Yellow-green → Schmerz I (≤ 75%)
+  - Orange → Schmerz II (≤ 50%)
+  - Dark orange → Schmerz III (≤ 25%)
+  - Dark red → Schmerz IV (≤ 5 LP absolute)
+- **Flash on damage/healing** — ring flashes red on damage, green on healing
+- **Configurable resource source** — track LeP, AsP, or KaP
+- **Show on hover** — optionally hide the arc until the mouse is over the token
+- **Fully adjustable arc** — span, rotation, stroke width, and radius all configurable
+- **Bilingual** — English and German UI
 
 ## Requirements
 
 - Foundry VTT v12+
 - DSA5 system (`dsa5`)
-- Dynamic Token Ring must be **enabled** on each token (Prototype Token → Ring Enabled ✓)
+- Dynamic Token Ring must be **enabled** on each token for flash effects (Prototype Token → Ring Enabled ✓)
 
 ## Installation
+
+### Manifest URL
+In Foundry's Add-on Modules browser, paste the manifest URL from the latest GitHub release.
 
 ### Manual
 1. Copy the `dsa5-dynamic-ring` folder into your Foundry `Data/modules/` directory
 2. Restart Foundry and enable the module in your world's Module Management
-
-### Manifest URL
-In Foundry's Add-on Modules browser, paste:
-```
-<your-hosted-url>/module.json
-```
 
 ## Configuration
 
@@ -38,28 +38,33 @@ All settings are under **Game Settings → Module Settings → DSA5 Dynamic Toke
 
 | Setting | Default | Description |
 |---|---|---|
-| Flash on Damage/Healing | ✓ | Red flash on damage, green on healing |
-| Ring Color Source | LeP | Which resource drives the color gradient |
-| Low Threshold | 25% | Below this → red zone |
-| Mid Threshold | 50% | Below this → yellow zone |
+| Flash on Damage/Healing | On | Ring flashes red on damage, green on healing |
+| Ring Color Source | LeP | Which resource drives the arc color (LeP / AsP / KaP) |
+| Show on Hover Only | Off | Hide arc and ring tint until hovering over the token |
+| Arc Span | 120° | Total width of the arc in degrees |
+| Arc Offset | 0° | Rotation of the arc center from 3 o'clock (−90° = 12pm, 90° = 6pm) |
+| Arc Width | 5 px | Stroke thickness of the arc |
+| Arc Radius | 78% | Distance from token center as % of token radius |
 
 ## How It Works
 
-The module hooks into Foundry's `drawToken` and `refreshToken` events to set the ring's color band based on the selected resource's current/max ratio. On actor updates, it detects changes to LeP/AsP/KaP and triggers flash animations.
+On every token draw, refresh, and actor update the module renders a PIXI arc as a child of the token. The arc color smoothly interpolates between the five DSA5 Schmerzstufen boundary colors based on the current resource value. The ring tint (via `token.document.update`) mirrors the same color for tokens with Dynamic Ring enabled.
+
+Flash effects use `token.ring.flashColor()` and trigger on any detected delta in the tracked resource.
 
 No system files are modified — everything works through Foundry's hook system.
 
 ## Compatibility Notes
 
-- This module uses the same Dynamic Token Ring API that dnd5e uses internally. If the DSA5 system adds native ring support in the future, you may want to disable this module to avoid conflicts.
 - Compatible with **SETT: Some Extra Token Ring Types** for custom ring styles.
-- Should work alongside **REDY: Reactive Dynamic Token Rings**, but you may get double-flashes on damage — disable REDY's generic flash if that happens.
+- Should work alongside **REDY: Reactive Dynamic Token Rings**, but you may get double-flashes on damage — disable REDY's flash if that happens.
+- If the DSA5 system adds native ring support in a future version, disable this module to avoid conflicts.
 
 ## Known Limitations
 
-- The ring color band is a single color — it doesn't render a "progress bar fill" inside the ring. It changes the entire ring's hue to represent the resource level. This is a limitation of Foundry's TokenRing API, not this module.
-- Only one resource can drive the ring color at a time (configurable via settings).
-- The DSA5 system's exact data paths (`system.status.LeP.value`) may change between major system versions. If the ring stops responding after a DSA5 update, check for a module update.
+- Only one resource can drive the arc color at a time (configurable via settings).
+- The arc is drawn within the token's own PIXI layer — it won't appear above tokens stacked on top of it. Keeping the arc inside the token boundary (lower radius %) avoids most overlap issues.
+- `document.update()` calls for the ring tint are async and trigger a network sync. Rapid consecutive HP changes may produce a short visual lag on the ring color (the arc itself updates instantly).
 
 ## License
 
