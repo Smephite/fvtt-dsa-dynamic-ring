@@ -1,11 +1,11 @@
 {
   "id": "dsa5-dynamic-ring",
   "title": "DSA5 Dynamic Token Ring",
-  "description": "Integrates LeP, AsP, and KaP into Foundry VTT's Dynamic Token Ring system for Das Schwarze Auge 5th Edition. The ring color reflects current LeP (green → yellow → red), and flashes on damage/healing.",
-  "version": "0.2.0",
+  "description": "Visualizes DSA5 resources (LeP, AsP, KaP) on tokens via a configurable health arc and Dynamic Token Ring tint. Colors follow Schmerzstufen thresholds. Flashes on damage and healing.",
+  "version": "0.3.0",
   "url": "https://github.com/Smephite/fvtt-dsa-dynamic-ring",
   "manifest": "https://github.com/Smephite/fvtt-dsa-dynamic-ring/releases/latest/download/module.json",
-  "download": "https://github.com/Smephite/fvtt-dsa-dynamic-ring/releases/download/v0.2.0/module.zip",
+  "download": "https://github.com/Smephite/fvtt-dsa-dynamic-ring/releases/download/v0.3.0/module.zip",
   "authors": [
     {
       "name": "Kai Berszin"
