@@ -1,0 +1,39 @@
+{
+  "id": "dsa5-dynamic-ring",
+  "title": "DSA5 Dynamic Token Ring",
+  "description": "Integrates LeP, AsP, and KaP into Foundry VTT's Dynamic Token Ring system for Das Schwarze Auge 5th Edition. The ring color reflects current LeP (green → yellow → red), and flashes on damage/healing.",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Kai Berszin"
+    }
+  ],
+  "compatibility": {
+    "minimum": "12",
+    "verified": "14"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "dsa5",
+        "type": "system",
+        "compatibility": {}
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.mjs"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "de",
+      "name": "Deutsch",
+      "path": "lang/de.json"
+    }
+  ]
+}

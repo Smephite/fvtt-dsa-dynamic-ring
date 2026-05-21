@@ -1,0 +1,27 @@
+{
+  "dsa5-dynamic-ring": {
+    "settings": {
+      "flashOnDamage": {
+        "name": "Flash on Damage/Healing",
+        "hint": "Flash the token ring red on damage and green on healing."
+      },
+      "ringColorSource": {
+        "name": "Ring Color Source",
+        "hint": "Which resource determines the ring's color gradient.",
+        "choices": {
+          "LeP": "Life Points (LeP)",
+          "AsP": "Arcane Points (AsP)",
+          "KaP": "Karma Points (KaP)"
+        }
+      },
+      "lowThreshold": {
+        "name": "Low Threshold (%)",
+        "hint": "Below this percentage the ring turns red."
+      },
+      "midThreshold": {
+        "name": "Mid Threshold (%)",
+        "hint": "Below this percentage the ring turns yellow."
+      }
+    }
+  }
+}

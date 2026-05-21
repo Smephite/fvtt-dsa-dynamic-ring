@@ -1,0 +1,27 @@
+{
+  "dsa5-dynamic-ring": {
+    "settings": {
+      "flashOnDamage": {
+        "name": "Aufblitzen bei Schaden/Heilung",
+        "hint": "Lässt den Token-Ring bei Schaden rot und bei Heilung grün aufblitzen."
+      },
+      "ringColorSource": {
+        "name": "Ring-Farbquelle",
+        "hint": "Welche Ressource die Farbabstufung des Rings bestimmt.",
+        "choices": {
+          "LeP": "Lebenspunkte (LeP)",
+          "AsP": "Astralpunkte (AsP)",
+          "KaP": "Karmapunkte (KaP)"
+        }
+      },
+      "lowThreshold": {
+        "name": "Niedrig-Schwelle (%)",
+        "hint": "Unter diesem Prozentwert wird der Ring rot."
+      },
+      "midThreshold": {
+        "name": "Mittel-Schwelle (%)",
+        "hint": "Unter diesem Prozentwert wird der Ring gelb."
+      }
+    }
+  }
+}
