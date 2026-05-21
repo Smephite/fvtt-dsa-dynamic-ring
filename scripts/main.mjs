@@ -172,13 +172,6 @@ function hasRing(token) {
 
 function applyRingColor(token) {
   if (!hasRing(token)) return;
-  const showOnHover = game.settings.get(MODULE_ID, "showOnHover");
-  if (showOnHover && !token.hover) {
-    if (token.document.ring?.colors?.ring !== null) {
-      token.document.update({ "ring.colors.ring": null });
-    }
-    return;
-  }
   const color = computeRingColor(token.actor);
   if (color === null) return;
   const hex = "#" + color.toString(16).padStart(6, "0");
@@ -287,7 +280,6 @@ function onUpdateActor(actor, changes, options, userId) {
 
 function onHoverToken(token, hovered) {
   if (!game.settings.get(MODULE_ID, "showOnHover")) return;
-  applyRingColor(token);
   const gfx = token.children?.find(c => c.name === HEALTH_ARC_NAME);
   if (gfx) gfx.visible = hovered;
 }
