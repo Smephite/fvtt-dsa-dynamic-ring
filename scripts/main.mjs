@@ -208,7 +208,7 @@ function refreshHealthArc(token) {
 
     const span     = game.settings.get(MODULE_ID, "arcSpan")   * Math.PI / 180;
     const offset   = game.settings.get(MODULE_ID, "arcOffset") * Math.PI / 180;
-    const arcWidth = game.settings.get(MODULE_ID, "arcWidth");
+    const arcWidth = Math.max(1, Math.round(token.w * game.settings.get(MODULE_ID, "arcWidth") / 100));
     const radius   = token.w / 2 * (game.settings.get(MODULE_ID, "arcRadius") / 100);
 
     // offset=0 → centered at 3pm (angle 0); negative = rotate toward 12pm

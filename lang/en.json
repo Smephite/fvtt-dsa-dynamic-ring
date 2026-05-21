@@ -27,8 +27,8 @@
         "hint": "Rotation of the arc center from 3 o'clock. Negative values rotate toward 12 o'clock."
       },
       "arcWidth": {
-        "name": "Arc Width (px)",
-        "hint": "Stroke width of the health arc in pixels."
+        "name": "Arc Width (% of token)",
+        "hint": "Stroke width of the health arc as a percentage of the token's width."
       },
       "arcRadius": {
         "name": "Arc Radius (%)",

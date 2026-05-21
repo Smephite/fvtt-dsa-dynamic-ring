@@ -27,8 +27,8 @@
         "hint": "Drehung des Bogenmittelpunkts von 3 Uhr aus. Negative Werte drehen Richtung 12 Uhr."
       },
       "arcWidth": {
-        "name": "Bogenbreite (px)",
-        "hint": "Strichstärke des Gesundheitsbogens in Pixeln."
+        "name": "Bogenbreite (% des Tokens)",
+        "hint": "Strichstärke des Gesundheitsbogens als Prozentsatz der Token-Breite."
       },
       "arcRadius": {
         "name": "Bogenradius (%)",
