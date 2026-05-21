@@ -1,8 +1,12 @@
 /**
  * DSA5 Dynamic Token Ring
  *
- * Hooks into Foundry VTT's Dynamic Token Ring system to provide
- * DSA5-specific ring color gradients (LeP/AsP/KaP) and flash effects.
+ * Colors and arcs follow DSA5 Schmerzstufen thresholds:
+ *   Schmerz IV  ≤ 5 LP (absolute)
+ *   Schmerz III ≤ 25% max LP
+ *   Schmerz II  ≤ 50% max LP
+ *   Schmerz I   ≤ 75% max LP
+ *   Kein Schmerz > 75% max LP
  */
 
 const MODULE_ID = "dsa5-dynamic-ring";
@@ -11,17 +15,23 @@ const MODULE_ID = "dsa5-dynamic-ring";
 /*  Color constants                         */
 /* ---------------------------------------- */
 
-const COLOR_DAMAGE  = 0xFF0000; // red   (standard RGB for Color.from)
-const COLOR_HEALING = 0x00FF00; // green (standard RGB for Color.from)
+const COLOR_DAMAGE  = 0xFF0000;
+const COLOR_HEALING = 0x00FF00;
 
-const RING_GREEN  = 0x22CC44;
-const RING_YELLOW = 0xDDAA00;
-const RING_RED    = 0xCC2222;
-const RING_GRAY   = 0x666666; // defeated / zero
+// Boundary colors at each Schmerzstufe threshold
+const COLOR_PAIN_NONE = 0x22CC44; // > 75%  — kein Schmerz
+const COLOR_PAIN_I    = 0x99CC00; // 75%    — Schmerz I
+const COLOR_PAIN_II   = 0xDDAA00; // 50%    — Schmerz II
+const COLOR_PAIN_III  = 0xDD4400; // 25%    — Schmerz III
+const COLOR_PAIN_IV   = 0xAA0000; // ≤ 5 LP — Schmerz IV
 
-// DSA5 actual data paths: setting key → actor.system.status key
+// DSA5 status key mapping: setting key → actor.system.status key
 const STATUS_KEY_MAP = { LeP: "wounds", AsP: "astralenergy", KaP: "karmaenergy" };
 const STATUS_KEYS = Object.values(STATUS_KEY_MAP);
+
+// Health arc
+const HEALTH_ARC_NAME = `${MODULE_ID}.health-arc`;
+const ARC_SEGMENTS = 32;
 
 /* ---------------------------------------- */
 /*  Settings                                */
@@ -51,24 +61,13 @@ function registerSettings() {
     },
   });
 
-  game.settings.register(MODULE_ID, "lowThreshold", {
-    name: `${MODULE_ID}.settings.lowThreshold.name`,
-    hint: `${MODULE_ID}.settings.lowThreshold.hint`,
+  game.settings.register(MODULE_ID, "showOnHover", {
+    name: `${MODULE_ID}.settings.showOnHover.name`,
+    hint: `${MODULE_ID}.settings.showOnHover.hint`,
     scope: "world",
     config: true,
-    type: Number,
-    default: 25,
-    range: { min: 5, max: 50, step: 5 },
-  });
-
-  game.settings.register(MODULE_ID, "midThreshold", {
-    name: `${MODULE_ID}.settings.midThreshold.name`,
-    hint: `${MODULE_ID}.settings.midThreshold.hint`,
-    scope: "world",
-    config: true,
-    type: Number,
-    default: 50,
-    range: { min: 20, max: 80, step: 5 },
+    type: Boolean,
+    default: false,
   });
 }
 
@@ -76,10 +75,6 @@ function registerSettings() {
 /*  Helpers                                 */
 /* ---------------------------------------- */
 
-/**
- * DSA5 stores: actor.system.status.wounds.current / .max (etc.)
- * The setting key (LeP/AsP/KaP) maps to the actual status key via STATUS_KEY_MAP.
- */
 function getResource(actor, key) {
   if (!actor?.system?.status) return null;
   const statusKey = STATUS_KEY_MAP[key];
@@ -93,58 +88,120 @@ function getResource(actor, key) {
 function lerpColor(a, b, t) {
   const ar = (a >> 16) & 0xFF, ag = (a >> 8) & 0xFF, ab = a & 0xFF;
   const br = (b >> 16) & 0xFF, bg = (b >> 8) & 0xFF, bb = b & 0xFF;
-  const rr = Math.round(ar + (br - ar) * t);
-  const rg = Math.round(ag + (bg - ag) * t);
-  const rb = Math.round(ab + (bb - ab) * t);
-  return (rr << 16) | (rg << 8) | rb;
+  return (Math.round(ar + (br - ar) * t) << 16)
+       | (Math.round(ag + (bg - ag) * t) << 8)
+       |  Math.round(ab + (bb - ab) * t);
+}
+
+/**
+ * Map an absolute HP value to a color following DSA5 Schmerzstufen.
+ * Colors lerp smoothly between stage boundary colors so the arc shows
+ * a continuous gradient rather than hard cuts.
+ */
+function colorForHP(value, max) {
+  if (value <= 5) return COLOR_PAIN_IV;
+
+  const pct = value / max;
+
+  if (pct <= 0.25) {
+    // Schmerz III zone: lerp from IV (at 5 LP) → III (at 25%)
+    const t = (value - 5) / (max * 0.25 - 5);
+    return lerpColor(COLOR_PAIN_IV, COLOR_PAIN_III, Math.clamp(t, 0, 1));
+  }
+  if (pct <= 0.50) {
+    return lerpColor(COLOR_PAIN_III, COLOR_PAIN_II, (pct - 0.25) / 0.25);
+  }
+  if (pct <= 0.75) {
+    return lerpColor(COLOR_PAIN_II, COLOR_PAIN_I, (pct - 0.50) / 0.25);
+  }
+  return lerpColor(COLOR_PAIN_I, COLOR_PAIN_NONE, (pct - 0.75) / 0.25);
 }
 
 function computeRingColor(actor) {
   const key = game.settings.get(MODULE_ID, "ringColorSource");
   const res = getResource(actor, key);
-  if (!res) return null;
-
-  const pct = Math.clamp(res.value / res.max, 0, 1) * 100;
-  const low = game.settings.get(MODULE_ID, "lowThreshold");
-  const mid = game.settings.get(MODULE_ID, "midThreshold");
-
-  if (pct <= 0) return RING_GRAY;
-  if (pct <= low) return lerpColor(RING_RED, RING_YELLOW, pct / low);
-  if (pct <= mid) return lerpColor(RING_YELLOW, RING_GREEN, (pct - low) / (mid - low));
-  return RING_GREEN;
+  return res ? colorForHP(res.value, res.max) : null;
 }
 
-// V14: hasDynamicRing is undefined; check for the ring object and its method instead.
+// V14: hasDynamicRing is undefined; duck-type instead.
 function hasRing(token) {
   return !!(token.ring && typeof token.ring.configureVisuals === "function");
 }
 
 /* ---------------------------------------- */
-/*  Core ring update                        */
+/*  Ring color                              */
 /* ---------------------------------------- */
 
-/**
- * Apply the computed ring color via document.update().
- * configureVisuals() reads from document data, so setting ringColorLittleEndian
- * directly has no visible effect — only document.update() persists correctly.
- *
- * The guard prevents an update→refresh→update loop: after the async update
- * resolves, the stored color matches hex and subsequent calls are no-ops.
- *
- * To fill the entire background circle instead of (or in addition to) the
- * ring band, update "ring.colors.background" — more visible but covers the
- * token art tint area.
- */
 function applyRingColor(token) {
   if (!hasRing(token)) return;
-  const actor = token.actor;
-  if (!actor) return;
-  const color = computeRingColor(actor);
+  const showOnHover = game.settings.get(MODULE_ID, "showOnHover");
+  if (showOnHover && !token.hover) {
+    if (token.document.ring?.colors?.ring !== null) {
+      token.document.update({ "ring.colors.ring": null });
+    }
+    return;
+  }
+  const color = computeRingColor(token.actor);
   if (color === null) return;
-
   const hex = "#" + color.toString(16).padStart(6, "0");
-  if (token.document.ring?.colors?.ring === hex) return; // already up to date
+  if (token.document.ring?.colors?.ring === hex) return; // loop guard
   token.document.update({ "ring.colors.ring": hex });
+}
+
+/* ---------------------------------------- */
+/*  Health arc (PIXI)                       */
+/* ---------------------------------------- */
+
+function refreshHealthArc(token) {
+  const key = game.settings.get(MODULE_ID, "ringColorSource");
+  const res = token.actor ? getResource(token.actor, key) : null;
+
+  let gfx = token.children?.find(c => c.name === HEALTH_ARC_NAME);
+  if (!gfx) {
+    gfx = new PIXI.Graphics();
+    gfx.name = HEALTH_ARC_NAME;
+    token.addChild(gfx);
+  }
+  gfx.clear();
+
+  if (res) {
+    const cx = token.w / 2;
+    const cy = token.h / 2;
+    const radius = token.w / 2 + 5;
+    const arcWidth = Math.max(3, Math.round(token.w / 20));
+    const START = -Math.PI / 2; // 12 o'clock, clockwise
+
+    // Background track
+    gfx.lineStyle({ width: arcWidth, color: 0x111111, alpha: 0.5, cap: PIXI.LINE_CAP.BUTT });
+    gfx.arc(cx, cy, radius, 0, Math.PI * 2);
+
+    const pct = Math.clamp(res.value / res.max, 0, 1);
+    if (pct > 0) {
+      // Gradient fill: segment i represents the HP at (i/(segments-1)) * current,
+      // so the arc reads left=critical → right=current state.
+      const fillAngle = pct * Math.PI * 2;
+      const segAngle = fillAngle / ARC_SEGMENTS;
+
+      for (let i = 0; i < ARC_SEGMENTS; i++) {
+        const segHP = (i / (ARC_SEGMENTS - 1)) * res.value;
+        gfx.lineStyle({
+          width: arcWidth,
+          color: colorForHP(segHP, res.max),
+          alpha: 1,
+          cap: PIXI.LINE_CAP.BUTT,
+        });
+        gfx.arc(cx, cy, radius, START + segAngle * i, START + segAngle * (i + 1));
+      }
+    }
+  }
+
+  const showOnHover = game.settings.get(MODULE_ID, "showOnHover");
+  gfx.visible = !showOnHover || !!token.hover;
+}
+
+function removeHealthArc(token) {
+  const gfx = token.children?.find(c => c.name === HEALTH_ARC_NAME);
+  if (gfx) { token.removeChild(gfx); gfx.destroy(); }
 }
 
 /* ---------------------------------------- */
@@ -153,21 +210,17 @@ function applyRingColor(token) {
 
 function onDrawToken(token) {
   applyRingColor(token);
+  refreshHealthArc(token);
 }
 
 function onRefreshToken(token) {
   applyRingColor(token);
+  refreshHealthArc(token);
 }
 
-/**
- * Stash current resource values before the actor update so onUpdateActor
- * can compute a reliable delta. Keys must match the DSA5 status keys
- * (wounds/astralenergy/karmaenergy), not the setting keys (LeP/AsP/KaP).
- */
 function onPreUpdateActor(actor, changes, options, userId) {
   const statusChanges = changes?.system?.status;
   if (!statusChanges) return;
-
   for (const statusKey of STATUS_KEYS) {
     if (statusChanges[statusKey]?.current !== undefined) {
       const current = actor.system?.status?.[statusKey]?.current ?? 0;
@@ -178,37 +231,36 @@ function onPreUpdateActor(actor, changes, options, userId) {
 
 function onUpdateActor(actor, changes, options, userId) {
   if (!game.settings.get(MODULE_ID, "flashOnDamage")) return;
-
   const statusChanges = changes?.system?.status;
   if (!statusChanges) return;
-
   for (const statusKey of STATUS_KEYS) {
     if (statusChanges[statusKey]?.current === undefined) continue;
-
     const newVal = statusChanges[statusKey].current;
     const prevVal = options?.[`${MODULE_ID}.prev_${statusKey}`] ?? newVal;
     const delta = newVal - prevVal;
     if (delta === 0) continue;
-
     const flashColor = delta < 0 ? COLOR_DAMAGE : COLOR_HEALING;
-    const tokens = actor.getActiveTokens(true);
-    for (const token of tokens) {
+    for (const token of actor.getActiveTokens(true)) {
       if (!hasRing(token)) continue;
       token.ring.flashColor?.(foundry.utils.Color.from(flashColor), { duration: 500 });
     }
   }
 }
 
-function onUpdateActorRefreshRing(actor, changes, options, userId) {
+function onHoverToken(token, hovered) {
+  if (!game.settings.get(MODULE_ID, "showOnHover")) return;
+  applyRingColor(token);
+  const gfx = token.children?.find(c => c.name === HEALTH_ARC_NAME);
+  if (gfx) gfx.visible = hovered;
+}
+
+function onUpdateActorRefresh(actor, changes, options, userId) {
   const statusChanges = changes?.system?.status;
   if (!statusChanges) return;
-
-  const hasRelevantChange = STATUS_KEYS.some(k => statusChanges[k]?.current !== undefined);
-  if (!hasRelevantChange) return;
-
-  const tokens = actor.getActiveTokens(true);
-  for (const token of tokens) {
+  if (!STATUS_KEYS.some(k => statusChanges[k]?.current !== undefined)) return;
+  for (const token of actor.getActiveTokens(true)) {
     applyRingColor(token);
+    refreshHealthArc(token);
   }
 }
 
@@ -221,15 +273,15 @@ Hooks.once("init", () => {
   registerSettings();
 });
 
-Hooks.on("drawToken", onDrawToken);
+Hooks.on("drawToken",    onDrawToken);
 Hooks.on("refreshToken", onRefreshToken);
+Hooks.on("hoverToken",   onHoverToken);
+Hooks.on("destroyToken", removeHealthArc);
 Hooks.on("preUpdateActor", onPreUpdateActor);
 Hooks.on("updateActor", (actor, changes, options, userId) => {
   onUpdateActor(actor, changes, options, userId);
-  onUpdateActorRefreshRing(actor, changes, options, userId);
+  onUpdateActorRefresh(actor, changes, options, userId);
 });
-
-// Refresh ring color when the token's dynamic ring is toggled on
 Hooks.on("updateToken", (tokenDoc, changes, options, userId) => {
   if (changes?.ring?.enabled !== undefined) {
     const token = tokenDoc.object;

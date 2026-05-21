@@ -14,6 +14,10 @@
           "KaP": "Karmapunkte (KaP)"
         }
       },
+      "showOnHover": {
+        "name": "Nur bei Hover anzeigen",
+        "hint": "Gesundheitsbogen und Ringfarbe werden erst beim Überfahren mit der Maus eingeblendet."
+      },
       "lowThreshold": {
         "name": "Niedrig-Schwelle (%)",
         "hint": "Unter diesem Prozentwert wird der Ring rot."

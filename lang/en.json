@@ -14,6 +14,10 @@
           "KaP": "Karma Points (KaP)"
         }
       },
+      "showOnHover": {
+        "name": "Show on Hover Only",
+        "hint": "Hide the health arc and ring color until the mouse hovers over the token."
+      },
       "lowThreshold": {
         "name": "Low Threshold (%)",
         "hint": "Below this percentage the ring turns red."
