@@ -29,10 +29,7 @@ const COLOR_PAIN_IV   = 0xAA0000; // ≤ 5 LP — Schmerz IV
 const STATUS_KEY_MAP = { LeP: "wounds", AsP: "astralenergy", KaP: "karmaenergy" };
 const STATUS_KEYS = Object.values(STATUS_KEY_MAP);
 
-// Health arc — 120° centered at 3 o'clock (1pm → 5pm)
 const HEALTH_ARC_NAME = `${MODULE_ID}.health-arc`;
-const ARC_SPAN  = (120 * Math.PI) / 180;
-const ARC_START = -ARC_SPAN / 2; // −60° = 1pm position
 
 /* ---------------------------------------- */
 /*  Settings                                */
@@ -69,6 +66,46 @@ function registerSettings() {
     config: true,
     type: Boolean,
     default: false,
+  });
+
+  game.settings.register(MODULE_ID, "arcSpan", {
+    name: `${MODULE_ID}.settings.arcSpan.name`,
+    hint: `${MODULE_ID}.settings.arcSpan.hint`,
+    scope: "world",
+    config: true,
+    type: Number,
+    default: 120,
+    range: { min: 10, max: 360, step: 5 },
+  });
+
+  game.settings.register(MODULE_ID, "arcOffset", {
+    name: `${MODULE_ID}.settings.arcOffset.name`,
+    hint: `${MODULE_ID}.settings.arcOffset.hint`,
+    scope: "world",
+    config: true,
+    type: Number,
+    default: 0,
+    range: { min: -180, max: 180, step: 5 },
+  });
+
+  game.settings.register(MODULE_ID, "arcWidth", {
+    name: `${MODULE_ID}.settings.arcWidth.name`,
+    hint: `${MODULE_ID}.settings.arcWidth.hint`,
+    scope: "world",
+    config: true,
+    type: Number,
+    default: 5,
+    range: { min: 1, max: 20, step: 1 },
+  });
+
+  game.settings.register(MODULE_ID, "arcRadius", {
+    name: `${MODULE_ID}.settings.arcRadius.name`,
+    hint: `${MODULE_ID}.settings.arcRadius.hint`,
+    scope: "world",
+    config: true,
+    type: Number,
+    default: 78,
+    range: { min: 10, max: 100, step: 2 },
   });
 }
 
@@ -168,22 +205,28 @@ function refreshHealthArc(token) {
   if (res) {
     const cx = token.w / 2;
     const cy = token.h / 2;
-    const radius = token.w / 2 * 0.78;
-    const arcWidth = Math.max(3, Math.round(token.w / 20));
-    const END = ARC_START + ARC_SPAN;
 
-    // Background track (full 120°)
+    const span     = game.settings.get(MODULE_ID, "arcSpan")   * Math.PI / 180;
+    const offset   = game.settings.get(MODULE_ID, "arcOffset") * Math.PI / 180;
+    const arcWidth = game.settings.get(MODULE_ID, "arcWidth");
+    const radius   = token.w / 2 * (game.settings.get(MODULE_ID, "arcRadius") / 100);
+
+    // offset=0 → centered at 3pm (angle 0); negative = rotate toward 12pm
+    const arcStart = offset - span / 2;
+    const arcEnd   = offset + span / 2;
+
+    // Background track
     gfx.lineStyle({ width: arcWidth, color: 0x111111, alpha: 0.5, cap: PIXI.LINE_CAP.ROUND });
-    gfx.moveTo(cx + radius * Math.cos(ARC_START), cy + radius * Math.sin(ARC_START));
-    gfx.arc(cx, cy, radius, ARC_START, END);
+    gfx.moveTo(cx + radius * Math.cos(arcStart), cy + radius * Math.sin(arcStart));
+    gfx.arc(cx, cy, radius, arcStart, arcEnd);
 
-    // Filled portion — anchored at bottom (5pm), drains from top (1pm) as HP drops
+    // Filled portion — anchored at bottom end, drains from top end as HP drops
     const pct = Math.clamp(res.value / res.max, 0, 1);
     if (pct > 0) {
-      const fillStart = ARC_START + (1 - pct) * ARC_SPAN;
+      const fillStart = arcStart + (1 - pct) * span;
       gfx.lineStyle({ width: arcWidth, color: colorForHP(res.value, res.max), alpha: 1, cap: PIXI.LINE_CAP.ROUND });
       gfx.moveTo(cx + radius * Math.cos(fillStart), cy + radius * Math.sin(fillStart));
-      gfx.arc(cx, cy, radius, fillStart, END);
+      gfx.arc(cx, cy, radius, fillStart, arcEnd);
     }
   }
 

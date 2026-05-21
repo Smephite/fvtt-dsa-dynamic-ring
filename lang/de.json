@@ -18,6 +18,22 @@
         "name": "Nur bei Hover anzeigen",
         "hint": "Gesundheitsbogen und Ringfarbe werden erst beim Überfahren mit der Maus eingeblendet."
       },
+      "arcSpan": {
+        "name": "Bogenspanne (Grad)",
+        "hint": "Gesamtbreite des Gesundheitsbogens in Grad (10–360)."
+      },
+      "arcOffset": {
+        "name": "Bogenversatz (Grad)",
+        "hint": "Drehung des Bogenmittelpunkts von 3 Uhr aus. Negative Werte drehen Richtung 12 Uhr."
+      },
+      "arcWidth": {
+        "name": "Bogenbreite (px)",
+        "hint": "Strichstärke des Gesundheitsbogens in Pixeln."
+      },
+      "arcRadius": {
+        "name": "Bogenradius (%)",
+        "hint": "Abstand des Bogens vom Tokenmittelpunkt als Prozentsatz des Token-Radius."
+      },
       "lowThreshold": {
         "name": "Niedrig-Schwelle (%)",
         "hint": "Unter diesem Prozentwert wird der Ring rot."

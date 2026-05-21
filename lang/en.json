@@ -18,6 +18,22 @@
         "name": "Show on Hover Only",
         "hint": "Hide the health arc and ring color until the mouse hovers over the token."
       },
+      "arcSpan": {
+        "name": "Arc Span (degrees)",
+        "hint": "Total width of the health arc in degrees (10–360)."
+      },
+      "arcOffset": {
+        "name": "Arc Offset (degrees)",
+        "hint": "Rotation of the arc center from 3 o'clock. Negative values rotate toward 12 o'clock."
+      },
+      "arcWidth": {
+        "name": "Arc Width (px)",
+        "hint": "Stroke width of the health arc in pixels."
+      },
+      "arcRadius": {
+        "name": "Arc Radius (%)",
+        "hint": "Distance of the arc from the token center, as a percentage of the token's radius."
+      },
       "lowThreshold": {
         "name": "Low Threshold (%)",
         "hint": "Below this percentage the ring turns red."
