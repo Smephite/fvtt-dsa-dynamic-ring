@@ -41,6 +41,10 @@
       "midThreshold": {
         "name": "Mittel-Schwelle (%)",
         "hint": "Unter diesem Prozentwert wird der Ring gelb."
+      },
+      "gcAutoClose": {
+        "name": "Gruppensammelprobe-Fenster automatisch schließen",
+        "hint": "Schließt das Gruppensammelprobe-Fenster automatisch, wenn alle Teilnehmer gewürfelt haben."
       }
     }
   }

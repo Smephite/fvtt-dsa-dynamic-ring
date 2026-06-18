@@ -41,6 +41,10 @@
       "midThreshold": {
         "name": "Mid Threshold (%)",
         "hint": "Below this percentage the ring turns yellow."
+      },
+      "gcAutoClose": {
+        "name": "Auto-close Group Check Window",
+        "hint": "Automatically close the Group Check window when all participants have rolled."
       }
     }
   }
