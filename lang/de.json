@@ -1,6 +1,10 @@
 {
   "dsa5-dynamic-ring": {
     "settings": {
+      "ringTintEnabled": {
+        "name": "Ring-Färbung aktivieren",
+        "hint": "Färbt den dynamischen Token-Ring basierend auf dem Gesundheitsstatus. Erfordert, dass der Dynamische Ring am Token aktiviert ist."
+      },
       "flashOnDamage": {
         "name": "Aufblitzen bei Schaden/Heilung",
         "hint": "Lässt den Token-Ring bei Schaden rot und bei Heilung grün aufblitzen."

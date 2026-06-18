@@ -23,6 +23,15 @@ const HEALTH_ARC_NAME = `${MODULE_ID}.health-arc`;
 /* ---------------------------------------- */
 
 export function registerRingSettings() {
+  game.settings.register(MODULE_ID, "ringTintEnabled", {
+    name: `${MODULE_ID}.settings.ringTintEnabled.name`,
+    hint: `${MODULE_ID}.settings.ringTintEnabled.hint`,
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: true,
+  });
+
   game.settings.register(MODULE_ID, "flashOnDamage", {
     name: `${MODULE_ID}.settings.flashOnDamage.name`,
     hint: `${MODULE_ID}.settings.flashOnDamage.hint`,
@@ -153,6 +162,7 @@ function hasRing(token) {
 /* ---------------------------------------- */
 
 function applyRingColor(token) {
+  if (!game.settings.get(MODULE_ID, "ringTintEnabled")) return;
   if (!hasRing(token)) return;
   if (!game.user.isGM) return;
   const color = computeRingColor(token.actor);

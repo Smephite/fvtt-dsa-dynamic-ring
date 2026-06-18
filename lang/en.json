@@ -1,6 +1,10 @@
 {
   "dsa5-dynamic-ring": {
     "settings": {
+      "ringTintEnabled": {
+        "name": "Enable Ring Tint",
+        "hint": "Apply a health-based color tint to the dynamic token ring. Requires Dynamic Ring to be enabled on the token."
+      },
       "flashOnDamage": {
         "name": "Flash on Damage/Healing",
         "hint": "Flash the token ring red on damage and green on healing."
